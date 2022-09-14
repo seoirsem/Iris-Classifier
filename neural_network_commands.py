@@ -115,21 +115,25 @@ def Backpropogation(X,ys,thetas1,thetas2):
     #adding an extra line of zeros - error on the hidden layer bias term
     delta2 = np.zeros(shape = (t2x,t2y),dtype=float)
 
+    #print(ys.shape,X.shape)
+#    for x, y in zip(X, ys):
+# make ys the correct orientation
+
 
     for i in range(0,m):
     # looping over training data
-
-        # returns activations of all layers
-        a = CalculateOutputValue(X[i,:],thetas1,thetas2)
-
-        del3 = a[2] - ys[:,i] #error values on output layer
         
-        del2 = np.matmul(np.transpose(thetas2),del3) * (a[1] * (1-a[1]))
+        # returns activations of all layers
+        [x, a2, a3] = CalculateOutputValue(X[i,:],thetas1,thetas2)
+
+        del3 = a3 - ys[:,i] #error values on output layer
+        
+        del2 = np.matmul(np.transpose(thetas2),del3) * (a2 * (1-a2))
     
         # Remember, no del1 term as the first layer "x" is the inputs and is assumed to have no error        
-        delta2 += np.matmul(np.atleast_2d(del3).T,np.atleast_2d(a[1]))
+        delta2 += np.matmul(np.atleast_2d(del3).T,np.atleast_2d(a2))
 
-        delta1 = delta1 + np.matmul(np.atleast_2d(del2).T,np.atleast_2d(a[0]))
+        delta1 = delta1 + np.matmul(np.atleast_2d(del2).T,np.atleast_2d(x))
 
     delta2 = delta2/m
     delta1 = delta1/m
@@ -142,7 +146,7 @@ def GradiantDescent(thetas1,thetas2,delta1,delta2,alpha):
 
     newTheta1 = thetas1 - alpha*delta1[0:4,:]
     # simply removing the row of "0" errors associated with the error term
-    
+
     newTheta2 = thetas2 - alpha*delta2
 
     return[newTheta1,newTheta2]

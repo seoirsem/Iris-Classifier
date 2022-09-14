@@ -4,16 +4,16 @@ from matplotlib import pyplot as plt
 
 
 
-def PrintErrorConvergance(e1,e2):
+def PrintErrorConvergance(e):
     # e is an array of each cost value
 
     plt.figure()
     plt.grid()
-    m = len(e1)
+    m = len(e)
     x = range(0,m)
-    plt.plot(x,e1,'r+',label = 'Analytical')
-    plt.plot(x,e2,'b+', label = 'Backpropogation')
+    plt.plot(x,e,'r+',label = 'Analytical')
+    #plt.plot(x,e2,'b+', label = 'Backpropogation')
     plt.xlabel('Iteration Number')
     plt.ylabel('Cost Function')
-    plt.legend()
+    #plt.legend()
     plt.show()

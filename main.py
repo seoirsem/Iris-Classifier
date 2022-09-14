@@ -15,7 +15,7 @@ def main():
     #Either reads in a test and training dataset randomly sampled from the file, or makes one if they don't already exist
     if (not isfile("TrainingData.csv")) or (not isfile("TestData.csv")):
         # extracts X - 4x150 data, and y - 1x150 classifications
-        print('here')
+        print('Creating a training and test dataset.')
         filename = "IRIS.csv"
         data = ImportData(filename)
         # ViewData(data[0],data[1])
@@ -54,36 +54,27 @@ def main():
     print(CostFunction(X,ys,thetas1,thetas2))
 
 
- #   [delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetas1,thetas2,0.0001)
-
-    #print(delta2,delAnaly2)
-    #print(delta1,delAnaly1)
-#    print(delta1 - delAnaly1)
-
-    alpha = 1 
-    nStep = 10
+    alpha = 0.2
+    nStep = 500
     # Step size for gradient descent
-    errorsA = []
-    errorsB = []
+    e = []
 
     thetasAna1 = thetas1
     thetasAna2 = thetas2
 
     for i in range(nStep):
-        errorsB.append(CostFunction(X,ys,thetas1,thetas2))
-        errorsA.append(CostFunction(X,ys,thetasAna1,thetasAna2))
+        e.append(CostFunction(X,ys,thetas1,thetas2))
+        #errorsA.append(CostFunction(X,ys,thetasAna1,thetasAna2))
 
         [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
         [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
 
-        [delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetasAna1,thetasAna2,0.0001)
-        [thetasAna1,thetasAna2] = GradiantDescent(thetasAna1,thetasAna2,delAnaly1,delAnaly2,alpha)
+        #[delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetasAna1,thetasAna2,0.0001)
+        #[thetasAna1,thetasAna2] = GradiantDescent(thetasAna1,thetasAna2,delAnaly1,delAnaly2,alpha)
 
-        
-    PrintErrorConvergance(errorsA,errorsB)
+    PrintErrorConvergance(e)
 
 
-    
 
 if __name__ == "__main__":
     main()
