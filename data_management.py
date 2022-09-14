@@ -123,3 +123,13 @@ def NormaliseData(X):
 
     return [X, meanArray, stdArray]
 
+def NormaliseTestData(X,mean,std):
+
+    [m,n] = X.shape
+    for i in range(0,n):
+
+        for j in range(0,m):
+            X[j,i] = (X[j,i]-mean[i])/std[i]
+        
+
+    return X

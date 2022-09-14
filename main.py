@@ -1,3 +1,4 @@
+from cgi import test
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -7,6 +8,7 @@ from os.path import isfile
 from data_management import *
 from neural_network_commands import *
 from plotData import PrintErrorConvergance
+from run_test_set import RunTestSet
 
 def main():
 
@@ -51,12 +53,15 @@ def main():
     # layer 2 bias variables - with a bias term
     thetas2 = np.random.uniform(low = -e, high = e, size = (p,n+1))
 
-    print(CostFunction(X,ys,thetas1,thetas2))
+    #print(CostFunction(X,ys,thetas1,thetas2))
 
 
-    alpha = 0.2
+    alpha = 1
     nStep = 500
     # Step size for gradient descent
+    
+    print(str(nStep) + ' steps at a learning rate of ' + str(alpha))
+    
     e = []
 
     thetasAna1 = thetas1
@@ -72,8 +77,13 @@ def main():
         #[delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetasAna1,thetasAna2,0.0001)
         #[thetasAna1,thetasAna2] = GradiantDescent(thetasAna1,thetasAna2,delAnaly1,delAnaly2,alpha)
 
-    PrintErrorConvergance(e)
+    #PrintErrorConvergance(e)
 
+    ########### TODO ####### Log the theta values for reuse
+
+    print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
+
+    RunTestSet(testData,thetas1,thetas2,labels,mean,std)
 
 
 if __name__ == "__main__":
