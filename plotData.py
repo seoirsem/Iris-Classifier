@@ -3,6 +3,54 @@ from matplotlib import pyplot as plt
 import math
 
 
+def ViewData(X,y):
+    # reads the data and displays scatter charts of the variants coloured by classification
+    # Note that a legend is not added for legibility
+    # X is: sepal_length, sepal_width, petal_length, petal_width
+    # y is: Iris-setosa, Iris-versicolor, Iris-virginica
+
+    def plotScatter(n1,n2,X,y):
+        #plots a scatter of the given two arrays variables in X and the corresponding type y. 0 <= n1,n2 < 4
+        names = ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width']
+        plt.xlabel(names[n1] + ' (cm)')
+        plt.ylabel(names[n2] + ' (cm)')
+        plt.grid()
+
+        m = len(y)
+
+        for i in range(0,m):
+            if y[i] == 'Iris-setosa':
+                plt.plot(X[i,n1], X[i,n2], 'b+')
+            elif y[i] == 'Iris-versicolor':
+                plt.plot(X[i,n1], X[i,n2], 'g+')
+            elif y[i] == 'Iris-virginica':
+                plt.plot(X[i,n1], X[i,n2], color = 'orange', marker = '+')
+            else:
+                print('Flower type at position ' + str(i) + ' is not recognised.')
+
+    fig = plt.figure()
+    
+    plt.subplot(3, 2, 1)
+    plotScatter(0,1,X,y)
+
+    plt.subplot(3, 2, 2)
+    plotScatter(0,2,X,y)
+
+    plt.subplot(3, 2, 3)
+    plotScatter(0,3,X,y)
+
+    plt.subplot(3, 2, 4)
+    plotScatter(1,2,X,y)
+    
+    plt.subplot(3, 2, 5)
+    plotScatter(1,3,X,y)
+    
+    ax = plt.subplot(3, 2, 6)
+    plotScatter(2,3,X,y)
+    
+    plt.tight_layout() #needed to prevent the subplots overlapping
+    plt.show()
+
 
 def PlotErrorConvergance(e):
     # e is an array of each cost value
@@ -63,3 +111,20 @@ def PlotErrorAndPercentageCorrect(e, numberCorrect, numberIncorrect,testFlowerCo
     ax2.set_ylabel('Proportion correctly classified')
     #plt.legend()
     plt.show()
+
+def plotConvergenceData(eArray,alphas):
+
+    plt.figure()
+    plt.grid()
+    m,n = eArray.shape
+    x = range(n)
+    for i in range(m):
+        alpha = alphas[i]
+        plt.plot(x,eArray[i,:],label = str(round(alpha,2)))
+    plt.xlabel('Iteration Number')
+    plt.ylim([0,1])
+    plt.ylabel('Cost Function')
+    plt.legend()
+    plt.show()
+
+

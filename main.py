@@ -1,17 +1,17 @@
-from cProfile import label
-from cgi import test
+
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 from os.path import isfile
 import time
+
 import json
 
 
 
 from data_management import *
 from neural_network_commands import *
-from plotData import PlotErrorConvergance, PlotErrorAndPercentageCorrect, PlotErrorConverganceComparison
+from plotData import PlotErrorConvergance, PlotErrorAndPercentageCorrect, PlotErrorConverganceComparison, plotConvergenceData, ViewData
 from run_test_set import RunTestSet, NumberOfEachFlower
 
 
@@ -29,11 +29,13 @@ def PrepareInputData(displayInputData):
     trainingData = ImportData("TrainingData.csv")
     testData = ImportData("TestData.csv")
 
+    # use the following commands to view the test and training datasets:
+    if displayInputData:
+    #    ViewData(testData[0],testData[1])
+        ViewData(trainingData[0],trainingData[1])
+
     return trainingData,testData
 
-    # use the following commands to view the test and training datasets:
-    #       ViewData(testData[0],testData[1])
-    #       ViewData(trainingData[0],trainingData[1])
 
 def InitialiseArrays(trainingData,labels):
     
@@ -71,7 +73,7 @@ def RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2):
         if i % nSample == 0:
             print(i)
     end = time.time()
-    print(end - start)
+    print('Total time: ' + str(round(end - start,2)) + 's')
     return thetas1,thetas2,e
 
 def RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2):
@@ -90,7 +92,7 @@ def RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSam
             numberCorrect.append(nC)
             numberIncorrect.append(nI)
     end = time.time()
-    print(end - start)
+    print('Total time: ' + str(round(end - start,2)) + 's')
     return thetas1,thetas2,e,numberCorrect,numberIncorrect
 
 
@@ -109,7 +111,7 @@ def RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2):
             print(i)
 
     end = time.time()
-    print(end - start)
+    print('Total time: ' + str(round(end - start,2)) + 's')
 
     return thetasAna1,thetasAna1,eAnalytical
 
@@ -123,7 +125,7 @@ def main():
 
     alpha = 4
     # Gradient descent step size
-    nStep = 10
+    nStep = 20
     # Number of iterations
     nSample = 5
     # How often we sample the output accuracy
@@ -133,25 +135,40 @@ def main():
     # algorithm is slower, but tests the test set every nStep of the training to measure functional convergence
     numericalGradiantDescent = False
     outputConvergencePlot = False
-
+    loopOverAlpha = False
 
     trainingData, testData = PrepareInputData(displayInputData)
     
-    X, ys, mean, std, thetas1, thetas2 = InitialiseArrays(trainingData,labels)
-
-    print(str(nStep) + ' steps at a learning rate of ' + str(alpha))
-    
     # here we train the network
-    if backpropGradiantDescent:
-        if saveIntermediateSteps:
-            thetas1,thetas2,e = RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2)   
-        else:
-            thetas1,thetas2,e = RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2)
-    if numericalGradiantDescent:
-        thetasAna1,thetasAna1,eAnalytical = RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2)
+    if loopOverAlpha:
+        nAlpha = 7
+        alphas = np.logspace(-0.5,1,num = nAlpha,base = 10)
+        alphas = np.linspace(2,7,num = nAlpha)
+        eArray = np.empty(shape = (nAlpha,nStep))
+    else:
+        alphas = [alpha]
 
-    print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
+    for i in range(len(alphas)):
+        X, ys, mean, std, thetas1, thetas2 = InitialiseArrays(trainingData,labels)
 
+        alpha = alphas[i]
+
+        print(str(nStep) + ' steps at a learning rate of ' + str(round(alpha,2)))
+        if backpropGradiantDescent:
+            if saveIntermediateSteps:
+                thetas1,thetas2,e = RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2)   
+            else:
+                thetas1,thetas2,e = RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2)
+        if numericalGradiantDescent:
+            thetasAna1,thetasAna1,eAnalytical = RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2)
+
+        print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
+        if loopOverAlpha:
+            eArray[i,:] = e
+   
+    if loopOverAlpha:
+        plotConvergenceData(eArray,alphas)
+    
     ########### TODO ####### Log the theta values for reuse
     ########## TODO ########### plot the incorrectly identified flowers using a red circle over the initial charts
     
