@@ -1,19 +1,22 @@
+from cProfile import label
 from cgi import test
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 from os.path import isfile
+import time
+import json
+
 
 
 from data_management import *
 from neural_network_commands import *
-from plotData import PrintErrorConvergance
-from run_test_set import RunTestSet
+from plotData import PlotErrorConvergance, PlotErrorAndPercentageCorrect, PlotErrorConverganceComparison
+from run_test_set import RunTestSet, NumberOfEachFlower
 
-def main():
 
-    ################################
-
+def PrepareInputData(displayInputData):
+    
     #Either reads in a test and training dataset randomly sampled from the file, or makes one if they don't already exist
     if (not isfile("TrainingData.csv")) or (not isfile("TestData.csv")):
         # extracts X - 4x150 data, and y - 1x150 classifications
@@ -21,25 +24,24 @@ def main():
         filename = "IRIS.csv"
         data = ImportData(filename)
         # ViewData(data[0],data[1])
-        [trainingData, testData] = ProduceRandomSubsets(data[0],data[1])
-    else:
-        trainingData = ImportData("TrainingData.csv")
-        testData = ImportData("TestData.csv")
+        ProduceRandomSubsets(data[0],data[1])
+    
+    trainingData = ImportData("TrainingData.csv")
+    testData = ImportData("TestData.csv")
+
+    return trainingData,testData
 
     # use the following commands to view the test and training datasets:
     #       ViewData(testData[0],testData[1])
     #       ViewData(trainingData[0],trainingData[1])
 
-    ################################
-
-    labels = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+def InitialiseArrays(trainingData,labels):
+    
     X = trainingData[0]
     y = trainingData[1]
     ys = CreateClassifierOutputArrays(y,labels)
     [m,n] = X.shape
     [p,m] = ys.shape
-
-    #hiddenLayerSize = 8
     
     # Normalise the data in X (mean set to 0 and std to 1)
     # Mean and std are saved to apply to the test set later
@@ -54,36 +56,114 @@ def main():
     thetas2 = np.random.uniform(low = -e, high = e, size = (p,n+1))
 
     #print(CostFunction(X,ys,thetas1,thetas2))
+    return X,ys,mean,std,thetas1,thetas2
 
-
-    alpha = 1
-    nStep = 500
-    # Step size for gradient descent
-    
-    print(str(nStep) + ' steps at a learning rate of ' + str(alpha))
-    
+def RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2):
     e = []
+    numberIncorrect = []
+    numberCorrect = []
+
+    start = time.time()
+    for i in range(nStep):
+        e.append(CostFunction(X,ys,thetas1,thetas2))
+        [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
+        [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
+        if i % nSample == 0:
+            print(i)
+    end = time.time()
+    print(end - start)
+    return thetas1,thetas2,e
+
+def RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2):
+    e = []
+    numberIncorrect = []
+    numberCorrect = []
+
+    start = time.time()
+    for i in range(nStep):
+        e.append(CostFunction(X,ys,thetas1,thetas2))
+        [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
+        [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
+        if i % nSample == 0:
+            print(i)
+            nC, nI = RunTestSet(testData,thetas1,thetas2,labels,mean,std)
+            numberCorrect.append(nC)
+            numberIncorrect.append(nI)
+    end = time.time()
+    print(end - start)
+    return thetas1,thetas2,e,numberCorrect,numberIncorrect
+
+
+def RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2):
+    eAnalytical = []
 
     thetasAna1 = thetas1
     thetasAna2 = thetas2
-
+    start = time.time()
     for i in range(nStep):
-        e.append(CostFunction(X,ys,thetas1,thetas2))
-        #errorsA.append(CostFunction(X,ys,thetasAna1,thetasAna2))
+        eAnalytical.append(CostFunction(X,ys,thetasAna1,thetasAna2))
+        [delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetasAna1,thetasAna2,0.0001)
+        [thetasAna1,thetasAna2] = GradiantDescent(thetasAna1,thetasAna2,delAnaly1,delAnaly2,alpha)
 
-        [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
-        [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
+        if i % nSample == 0:
+            print(i)
 
-        #[delAnaly1,delAnaly2] = AnalyticGradiant(X,ys,thetasAna1,thetasAna2,0.0001)
-        #[thetasAna1,thetasAna2] = GradiantDescent(thetasAna1,thetasAna2,delAnaly1,delAnaly2,alpha)
+    end = time.time()
+    print(end - start)
 
-    #PrintErrorConvergance(e)
+    return thetasAna1,thetasAna1,eAnalytical
 
-    ########### TODO ####### Log the theta values for reuse
+
+
+def main():
+    displayInputData = False
+    e = 0.001
+    # this is the magnitude range of the initial seeding of the weights matrices
+    labels = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+
+    alpha = 4
+    # Gradient descent step size
+    nStep = 10
+    # Number of iterations
+    nSample = 5
+    # How often we sample the output accuracy
+    # How many of each flower are present in the (ground truth) of the test data
+    backpropGradiantDescent = True
+    saveIntermediateSteps = False
+    # algorithm is slower, but tests the test set every nStep of the training to measure functional convergence
+    numericalGradiantDescent = False
+    outputConvergencePlot = False
+
+
+    trainingData, testData = PrepareInputData(displayInputData)
+    
+    X, ys, mean, std, thetas1, thetas2 = InitialiseArrays(trainingData,labels)
+
+    print(str(nStep) + ' steps at a learning rate of ' + str(alpha))
+    
+    # here we train the network
+    if backpropGradiantDescent:
+        if saveIntermediateSteps:
+            thetas1,thetas2,e = RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2)   
+        else:
+            thetas1,thetas2,e = RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2)
+    if numericalGradiantDescent:
+        thetasAna1,thetasAna1,eAnalytical = RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2)
 
     print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
 
-    RunTestSet(testData,thetas1,thetas2,labels,mean,std)
+    ########### TODO ####### Log the theta values for reuse
+    ########## TODO ########### plot the incorrectly identified flowers using a red circle over the initial charts
+    
+    if outputConvergencePlot:
+        if numericalGradiantDescent and backpropGradiantDescent:
+            PlotErrorConverganceComparison(e,eAnalytical)
+        if numericalGradiantDescent:
+            PlotErrorConvergance(eAnalytical)
+        elif backpropGradiantDescent:
+            PlotErrorConvergance(e)
+            
+            
 
 
 if __name__ == "__main__":
