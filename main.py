@@ -71,7 +71,7 @@ def RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2):
         [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
         [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
         if i % nSample == 0:
-            print(i)
+            print('Step ' + str(i) + ' of ' + str(nStep))
     end = time.time()
     print('Total time: ' + str(round(end - start,2)) + 's')
     return thetas1,thetas2,e
@@ -137,10 +137,10 @@ def main():
     # How often we sample the output accuracy
     # How many of each flower are present in the (ground truth) of the test data
     backpropGradiantDescent = True
-    saveIntermediateSteps = True
+    saveIntermediateSteps = False
     # algorithm is slower, but tests the test set every nStep of the training to measure functional convergence
     numericalGradiantDescent = False
-    outputConvergencePlot = False
+    outputConvergencePlot = True
     loopOverAlpha = False
 
     trainingData, testData = PrepareInputData(displayInputData)
@@ -178,8 +178,9 @@ def main():
         print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
         if loopOverAlpha:
             eArray[i,:] = e
-        thetas1Array[1:nStep+1,:,:] = thetas1Arr
-        thetas2Array[1:nStep+1,:,:] = thetas2Arr
+        if saveIntermediateSteps:
+            thetas1Array[1:nStep+1,:,:] = thetas1Arr
+            thetas2Array[1:nStep+1,:,:] = thetas2Arr
         
     if loopOverAlpha:
         plotConvergenceData(eArray,alphas)

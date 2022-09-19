@@ -64,7 +64,7 @@ def CalculateNodeAndImportanceValues(X,n,thetas1,thetas2):
         lenx = len(x)
         out = np.zeros(lenx)
         for i in range(lenx):
-            out[i] = x[i]*sum(map(abs,theta[:,i]))
+            out[i] = abs(x[i])*sum(map(abs,theta[:,i]))
 
         return out
     
@@ -99,9 +99,12 @@ class ImportanceArray():
         z2Round = [round(x,1) for x in self.z2]
         xImpRound = [round(x,1) for x in self.xImp]
         a1ImpRound = [round(x,1) for x in self.a1Imp]
+        xImpRoundAbs = [round(x,1) for x in self.xImpAbs]
+        a1ImpRoundAbs = [round(x,1) for x in self.a1ImpAbs]
         print('The ground truth is ' + self.flower + ' or ' + str(self.dataLabel))
         print('z1: ' + str(z1Round) + '\nz2: ' + str(z2Round))
         print('Input importance: ' + str(xImpRound) + '\nHidden layer importance: ' + str(a1ImpRound))
+        print('Input absolute importance: ' + str(xImpRoundAbs) + '\nHidden layer importance: ' + str(a1ImpRoundAbs))
 
 
 def main():
@@ -127,7 +130,12 @@ def main():
         a1,a2,z1,z2,xImp,a1Imp,xImpAbs,a1ImpAbs = CalculateNodeAndImportanceValues(X,n,thetas1,thetas2)
         data.append(ImportanceArray(dataLabels[:,n],X[n,:],z1,z2,a1,a2,xImp,a1Imp,printNames[n],xImpAbs,a1ImpAbs))
 
-    data[29].PrintProperties()
+    data[5].PrintProperties()
+    data[16].PrintProperties()
+    data[30].PrintProperties()
+
+    print(thetas1)
+    print(thetas2)
 
 if __name__ == "__main__":
     main()
