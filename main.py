@@ -9,10 +9,10 @@ import json, codecs
 
 
 
-from data_management import *
-from neural_network_commands import *
-from plotData import PlotErrorConvergance, PlotErrorAndPercentageCorrect, PlotErrorConverganceComparison, plotConvergenceData, ViewData
-from run_test_set import RunTestSet, NumberOfEachFlower
+from data_management import ImportData, ProduceRandomSubsets, NormaliseData
+from neural_network_commands import CreateClassifierOutputArrays, CostFunction, Backpropogation, GradiantDescent, AnalyticGradiant
+from plotData import PlotErrorConvergance, PlotErrorConverganceComparison, plotConvergenceData, ViewData
+from run_test_set import RunTestSet
 
 
 def PrepareInputData(displayInputData):
@@ -202,9 +202,6 @@ def main():
           indent=4) ### this saves the array in .json format
         
     
-
-    ########### TODO ####### Log the theta values for reuse
-    ########## TODO ########### plot the incorrectly identified flowers using a red circle over the initial charts
     
     if outputConvergencePlot:
         if numericalGradiantDescent and backpropGradiantDescent:

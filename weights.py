@@ -110,13 +110,11 @@ class ImportanceArray():
 def main():
     trainingData, testData = PrepareInputData(False)
     thetas1, thetas2, thetas1Array, thetas2Array = LoadWeightData()
-    ## first two are the final thetas, the second pair include every theta value
+    # first two are the final thetas, the second pair include every theta value
+    # every theta value is logged in case I want to examine how the weights are learnt at a future date
     labels = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
     X,ys,mean,std,randomTheta1,randomTheta2 = InitialiseArrays(trainingData,labels)
 
-#    thetas1 = np.transpose(thetas1)
- #   thetas2 = np.transpose(thetas2)
-    
     X = testData[0].copy()
     [m,n] = np.shape(X)
     X = NormaliseTestData(X,mean,std)
@@ -130,6 +128,7 @@ def main():
         a1,a2,z1,z2,xImp,a1Imp,xImpAbs,a1ImpAbs = CalculateNodeAndImportanceValues(X,n,thetas1,thetas2)
         data.append(ImportanceArray(dataLabels[:,n],X[n,:],z1,z2,a1,a2,xImp,a1Imp,printNames[n],xImpAbs,a1ImpAbs))
 
+    # prints a sample of the data and the weights
     data[5].PrintProperties()
     data[16].PrintProperties()
     data[30].PrintProperties()
