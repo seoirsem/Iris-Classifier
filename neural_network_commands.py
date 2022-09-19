@@ -115,10 +115,8 @@ def Backpropogation(X,ys,thetas1,thetas2):
     #adding an extra line of zeros - error on the hidden layer bias term
     delta2 = np.zeros(shape = (t2x,t2y),dtype=float)
 
-    #print(ys.shape,X.shape)
 #    for x, y in zip(X, ys):
 # make ys the correct orientation
-
 
     for i in range(0,m):
     # looping over training data

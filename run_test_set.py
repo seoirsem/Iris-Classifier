@@ -33,7 +33,7 @@ def NumberOfEachFlower(testData,labels):
 
     return numberOfEachFlower
 
-def RunTestSet(testData,thetas1,thetas2,labels,mean,std,):
+def RunTestSet(testData,thetas1,thetas2,labels,mean,std):
 
     X = testData[0].copy()
     [m,n] = np.shape(X)

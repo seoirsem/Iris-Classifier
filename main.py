@@ -5,7 +5,7 @@ import numpy as np
 from os.path import isfile
 import time
 
-import json
+import json, codecs
 
 
 
@@ -80,12 +80,18 @@ def RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSam
     e = []
     numberIncorrect = []
     numberCorrect = []
+    m,n = thetas1.shape
+    o,p = thetas2.shape
+    thetas1Array = np.empty(shape = (nStep,m,n))
+    thetas2Array = np.empty(shape = (nStep,o,p))
 
     start = time.time()
     for i in range(nStep):
         e.append(CostFunction(X,ys,thetas1,thetas2))
         [delta1,delta2] = Backpropogation(X,ys,thetas1,thetas2)
         [thetas1,thetas2] = GradiantDescent(thetas1,thetas2,delta1,delta2,alpha)
+        thetas1Array[i,:,:] = thetas1
+        thetas2Array[i,:,:] = thetas2
         if i % nSample == 0:
             print(i)
             nC, nI = RunTestSet(testData,thetas1,thetas2,labels,mean,std)
@@ -93,7 +99,7 @@ def RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSam
             numberIncorrect.append(nI)
     end = time.time()
     print('Total time: ' + str(round(end - start,2)) + 's')
-    return thetas1,thetas2,e,numberCorrect,numberIncorrect
+    return thetas1,thetas2,e,numberCorrect,numberIncorrect,thetas1Array,thetas2Array
 
 
 def RunCoreAlgorithmNumerical(X,ys,alpha,nStep,nSample,thetas1,thetas2):
@@ -125,13 +131,13 @@ def main():
 
     alpha = 4
     # Gradient descent step size
-    nStep = 20
+    nStep = 300
     # Number of iterations
     nSample = 5
     # How often we sample the output accuracy
     # How many of each flower are present in the (ground truth) of the test data
     backpropGradiantDescent = True
-    saveIntermediateSteps = False
+    saveIntermediateSteps = True
     # algorithm is slower, but tests the test set every nStep of the training to measure functional convergence
     numericalGradiantDescent = False
     outputConvergencePlot = False
@@ -150,13 +156,20 @@ def main():
 
     for i in range(len(alphas)):
         X, ys, mean, std, thetas1, thetas2 = InitialiseArrays(trainingData,labels)
+        
+        m,n = thetas1.shape
+        o,p = thetas2.shape
+        thetas1Array = np.empty(shape = (nStep+1,m,n))
+        thetas2Array = np.empty(shape = (nStep+1,o,p))
+        thetas1Array[0,:,:] = thetas1
+        thetas2Array[0,:,:] = thetas2
 
         alpha = alphas[i]
 
         print(str(nStep) + ' steps at a learning rate of ' + str(round(alpha,2)))
         if backpropGradiantDescent:
             if saveIntermediateSteps:
-                thetas1,thetas2,e = RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2)   
+                thetas1,thetas2,e,numberCorrect,numberIncorrect,thetas1Arr,thetas2Arr = RunCoreAlgorithmBackSaveSteps(X,ys,testData,labels,mean,std,alpha,nStep,nSample,thetas1,thetas2)   
             else:
                 thetas1,thetas2,e = RunCoreAlgorithmBack(X,ys,alpha,nStep,nSample,thetas1,thetas2)
         if numericalGradiantDescent:
@@ -165,10 +178,30 @@ def main():
         print('The loss on the training dataset is: ' + str(round(CostFunction(X,ys,thetas1,thetas2),5)) + '.')
         if loopOverAlpha:
             eArray[i,:] = e
-   
+        thetas1Array[1:nStep+1,:,:] = thetas1Arr
+        thetas2Array[1:nStep+1,:,:] = thetas2Arr
+        
     if loopOverAlpha:
         plotConvergenceData(eArray,alphas)
     
+
+    if saveIntermediateSteps:
+        filePath1 = "weights1.json"
+        filePath2 = "weights2.json"
+
+        listTheta1 = thetas1Array.tolist()
+        json.dump(listTheta1, codecs.open(filePath1, 'w', encoding='utf-8'), 
+          separators=(',', ':'), 
+          sort_keys=True, 
+          indent=4) ### this saves the array in .json format
+        listTheta2 = thetas2Array.tolist()
+        json.dump(listTheta2, codecs.open(filePath2, 'w', encoding='utf-8'), 
+          separators=(',', ':'), 
+          sort_keys=True, 
+          indent=4) ### this saves the array in .json format
+        
+    
+
     ########### TODO ####### Log the theta values for reuse
     ########## TODO ########### plot the incorrectly identified flowers using a red circle over the initial charts
     
