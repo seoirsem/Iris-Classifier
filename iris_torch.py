@@ -8,14 +8,16 @@ from random import randint
 import numpy as np
 from matplotlib import pyplot as plt
 
+# Importing some tools from previous implementation (data management etc). I also include edited versions of some functions below.
 from main import PrepareInputData
 from data_management import NormaliseTestData, NormaliseData
 from neural_network_commands import CreateClassifierOutputArrays
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
+        # number of nodes in the single hidden layer
         self.hidden = 5
-
+        
         super(NeuralNetwork, self).__init__()
         self.linear_relu_stack = nn.Sequential(
             
@@ -92,17 +94,16 @@ def RunBackpropogationOptimisation(model,X,y,epochs,learningRate):
         loss.backward()
         optimizer.step()
     end = time.time()
-    print('Total training time: ' + str(round(end - start,2)) + 's for ' + str(epochs) + ' epochs.')
+    print('Total training time: ' + str(round(end - start,2)) + 's for ' + str(epochs) + ' epochs at a learning rate of ' + str(learningRate) + '.')
     
     return model, losses
 
 def main():
 
     # header    
-    printRandomData = False
-    plotLossFunction = False
+    plotLossFunction = True
     learningRate = 0.5
-    epochs = 100
+    epochs = 5000
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
@@ -116,10 +117,11 @@ def main():
     X = torch.from_numpy(data)
     y = torch.from_numpy(labels)
 
-    # Run optimisation
+    # Run optimisation. Note that I don't bother to save the model as training only takes ~1s anyway
     model, losses = RunBackpropogationOptimisation(model,X,y,epochs,learningRate)
 
 
+    # Look at learning
     if plotLossFunction:
         plt.figure()
         plt.plot(losses)
@@ -128,15 +130,24 @@ def main():
         plt.ylabel('Cross Entropy Loss')
         plt.show()
 
-
+    # Run test data
     xTestNP, yTestNP = InitialiseTestArrays(testData,strLabels,mean,std)
     [m,n] = np.shape(xTestNP)
     xTest = torch.from_numpy(xTestNP)
-    yTest = torch.from_numpy(yTestNP)
 
     yPred = model.forward(xTest.float())
-#    print(yPred)
 
+    numberCorrect = 0
+    totalNumber = 0
+    for pred in yPred:
+        labelValue = np.argmax(yTestNP[totalNumber,:])
+        totalNumber += 1
+        n = float(torch.argmax(pred))
+        if n==labelValue:
+            numberCorrect += 1
+        
+    percentage = round((100.0*numberCorrect)/totalNumber,1)
+    print('The model correctly classified ' + str(percentage) + '% of the test set.')
 
 
 if __name__ == "__main__":
